@@ -125,7 +125,7 @@ Rownames are used as the plotting character for biplots like this one which can 
 ```{r}
 # Make sure to color your plots using as.factor. 
 # This turns the colors discrete, rather than a continuous spectrum
-diagnosis <- as.factor(df$diagnosis)
+diagnosis <- factor(wisc.df$diagnosis)
 ```
 
 
@@ -153,7 +153,7 @@ df <- as.data.frame(wisc.pr$x)
 df$diagnosis <- diagnosis
 
 # Load the ggplot2 package
-#library(ggplot2)
+library(ggplot2)
 
 # Make a scatter plot colored by diagnosis
 ggplot(df) + aes(PC1, PC2, col=diagnosis) + 
@@ -230,7 +230,7 @@ data.dist <- dist(data.scaled)
 Create a hierarchical clustering model using complete linkage. Manually specify the method argument to hclust() and assign the results to `wisc.hclust`.
 
 ```{r}
-wisc.hclust <- hclust(data.dist, method="complete")
+wisc.hclust <- hclust(data.dist, method = "complete")
 ```
 
 # Results of hierarchical clustering
@@ -241,12 +241,147 @@ Let’s use the hierarchical clustering model you just created to determine a he
 
 ```{r}
 plot(wisc.hclust)
-abline()
+abline(h=19, col="red", lyt=2)
+```
+The height is about 19.
+
+Cut the tree into 4 groups
+
+```{r}
+wisc.hclust.clusters <- cutree(wisc.hclust, k=4)
+```
+
+Compare to diagnosis results
+
+```{r}
+table(wisc.hclust.clusters, diagnosis)
+```
+
+> **Q12**. Can you find a better cluster vs diagnoses match by cutting into a different number of clusters between 2 and 10?
+
+```{r}
+wisc.hclust.clusters2 <- cutree(wisc.hclust, k=2)
+table(wisc.hclust.clusters2, diagnosis)
+
+wisc.hclust.clusters10 <- cutree(wisc.hclust, k=10)
+table(wisc.hclust.clusters10, diagnosis)
+```
+Cutting into 4 clusters is the optimal cluster vs diagnoses match.
+
+# Using different methods
+There are different *"methods"* we can use to combine points during the hierarchical clustering procedure. These include `"single"`, `"complete"`, `"average"`, and `"ward.D2"`.
+
+> **Q13**. Which method gives your favorite results for the same `data.dist` dataset? Explain your reasoning.
+***Side-note****: the `method="ward.D2"` creates groups such that variance is minimized within clusters.*
+
+```{r}
+wisc.pc.hclusts <- hclust(dist(wisc.pr$x[,1:3]), method=
+                          "single")
+wisc.pc.hclustc <- hclust(dist(wisc.pr$x[,1:3]), method=
+                          "complete")
+wisc.pc.hclusta <- hclust(dist(wisc.pr$x[,1:3]), method=
+                          "average")
+wisc.pc.hclust <- hclust(dist(wisc.pr$x[,1:3]), method=
+                          "ward.D2")
+
+plot(wisc.pc.hclusts)
+plot(wisc.pc.hclustc)
+plot(wisc.pc.hclusta)
+plot(wisc.pc.hclust)
+```
+`ward.D2` gives the most symmetrical and visually appealing dendrogram. The clusters are also discrete and display an obvious pattern.
+
+## 5. Combining methods
+
+We take the results of our PCA analysis and cluster in this space `wisc.pr$x`
+
+```{r}
+summary(wisc.pr)
+```
+```{r}
+wisc.pc.hclust <- hclust(dist(wisc.pr$x[,1:3]), method=
+                          "ward.D2")
+plot(wisc.pc.hclust)
+abline(h=60, col="red")
+```
+
+Cut the tree into k=2 groups
+
+```{r}
+grps <- cutree(wisc.pc.hclust, k=2)
+table(grps)
+```
+
+> **Q15**. How well does the newly created model with four clusters separate out the two diagnoses?
+
+Cross-table comparison of diagnosis and my cluster groups
+
+```{r}
+table(diagnosis)
+table(diagnosis, grps)
+```
+The new model is better, separating the clusters into positive and negative results for both Benign and Malignant categories. 
+
+```{r}
+plot(wisc.pr$x[,1:2], col=grps)
+plot(wisc.pr$x[,1:2], col = diagnosis)
+```
+
+## 6. Sensitivity/Specificity
+**Accuracy**: What proportion did we get correct if we call cluster 1 M and cluster 2 B?
+
+```{r}
+(333 + 179)/nrow(wisc.data)
+```
+True positives of both Malignant and Benign.
+
+**Sensitivity** refers to a test's ability to correctly detect ill patients who do have the condition. In other words, TP/(TP+FN); diagnosis acceptance accuracy
+
+```{r}
+# Malignant: positive diagnosis
+179/(179+33)
+```
+
+**Specificity** relates to a test's ability to correctly reject healthy patients without a condition. In other words, TN/(TN+FN); diagnosis rejection accuracy
+
+```{r}
+# FN = 24, benign. FP = 28, malignant
+333/(333+24)
 ```
 
 
+## 7. Prediction
+
+We will use the `predict` function that will take our PCA model from before and *new cancer cell data* and project that data onto our PCA space.
+
+```{r}
+#url <- "new_samples.csv" to read the new data
+url <- "https://tinyurl.com/new-samples-CSV"
+new <- read.csv(url)
+npc <- predict(wisc.pr, newdata=new)
+npc
+```
+Plot onto our PCA model
+
+```{r}
+plot(wisc.pr$x[,1:2], col=diagnosis)
+points(npc[,1], npc[,2], col="blue", pch=16, cex=3)
+text(npc[,1], npc[,2], c(1,2), col="white")
+```
+
+> **Q17**. Which of your analysis procedures resulted in a clustering model with the best specificity? How about sensitivity?
+
+```{r}
+# Hclust Sensitivity
+165/(165+5+40+2)
+
+# Hclust Specificity
+343/(343+12+2+0)
+```
+
+Hclust produced the best specificity with a higher correct diagnosis of ill patients with the breast cancer. Kmeans produced the best sensitivity with a higher correct rejection of healthy patients.
 
 
+> **Q18**. Which of these new patients should we prioritize for follow up based on your results?
 
-
-
+We should follow up on the Malignant patient, or patient 2.
