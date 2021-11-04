@@ -1,0 +1,91 @@
+---
+title: "Class12: Structural Bioinformatics II"
+author: 'Monica Lin (PID: A15524235)'
+date: "11/4/2021"
+output: pdf_document
+---
+
+# Comparative analysis of protein structures
+
+Using the Bio3D package
+
+```{r}
+library(bio3d)
+
+pdb <- read.pdb("1hel")
+pdb
+```
+
+Let's use a bioinformatics method called NMA (Normal Mode Analysis) to predict the dynamics (flexibility) of this enzyme.
+
+```{r}
+modes <- nma(pdb)
+plot(modes)
+```
+
+Make a "movie" of its predicted motion. We often call this a "trajectory". Put the "nma.pdb" file into VMD and press play, or go to Trajectory --> Draw multiple frames (set to "0:100").
+
+```{r}
+mktrj(modes, file="nma.pdb")
+```
+
+#1hel Structure Visualization Image
+
+![](trajectory_1hel.png)
+
+# Analysis of ADK
+
+```{r}
+aa <- get.seq("1ake_A")
+aa
+```
+
+```{r}
+# Run BLAST from R
+#blast <- blast.pdb(aa)
+```
+
+```{r}
+plot(blast)
+```
+
+```{r}
+hits <- NULL
+hits$pdb.id <- c('1AKE_A','4X8M_A','6S36_A','6RZE_A','4X8H_A','3HPR_A','1E4V_A','5EJE_A','1E4Y_A','3X2S_A','6HAP_A','6HAM_A','4K46_A','4NP6_A','3GMT_A','4PZL_A')
+hits$pdb.id
+```
+
+```{r}
+# Download related PDB files
+#files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+
+Multiple structure alignment
+Download MUSCLE using the "Alternate Windows intall and setup cmd" terminal code on the website: `curl -o "muscle.exe" "https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86win32.exe"`
+```{r}
+#pdbs <- pdbaln(files, fit=TRUE)
+```
+
+# PCA
+
+We will use the bio3d pca() function which is designed for protein structure data.
+
+```{r}
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+
+# Visualize first principal component
+Make a trajectory visualization of the motion captured by the first Principal Component. Open this file in VMD.
+
+```{r}
+pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
+```
+
+![](pc_1.png)
+
+
+
+
+
+
