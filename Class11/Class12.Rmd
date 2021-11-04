@@ -1,8 +1,10 @@
 ---
-title: "Class12: Structural Bioinformatics II"
+title: 'Class12: Structural Bioinformatics II'
 author: 'Monica Lin (PID: A15524235)'
 date: "11/4/2021"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 # Comparative analysis of protein structures
@@ -42,7 +44,7 @@ aa
 
 ```{r}
 # Run BLAST from R
-#blast <- blast.pdb(aa)
+blast <- blast.pdb(aa)
 ```
 
 ```{r}
@@ -57,13 +59,13 @@ hits$pdb.id
 
 ```{r}
 # Download related PDB files
-#files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
 ```
 
 Multiple structure alignment
 Download MUSCLE using the "Alternate Windows intall and setup cmd" terminal code on the website: `curl -o "muscle.exe" "https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86win32.exe"`
 ```{r}
-#pdbs <- pdbaln(files, fit=TRUE)
+pdbs <- pdbaln(files, fit=TRUE)
 ```
 
 # PCA
@@ -85,6 +87,9 @@ pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
 ![](pc_1.png)
 
 
+# Visualize "Find-a-gene" project FASTA sequencei n alpha fold DB
+
+![](find_a_gene.png)
 
 
 
